@@ -89,7 +89,8 @@ def gen_passwords(wordset, minlen, maxlen):
         for combination in itertools.combinations(wordset, i+1):
             if len(combination) < minlen or len(combination) > maxlen:
                 continue
-            yield from leet_word(''.join(combination))
+            for permutation in itertools.permutations(combination):
+                yield from leet_word(''.join(permutation))
 
 
 def main():
