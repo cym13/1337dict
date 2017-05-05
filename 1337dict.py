@@ -113,6 +113,11 @@ def main():
     if args["--symbols"]:
         wordset = ["!", "-", ":", "_", "+", "%"] + wordset
 
+    # Combinations are done from the front to the back, so putting shorter
+    # elements first should iterate on more words in a shorter time
+    if permute:
+        wordset.sort(key=len)
+
     for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
         print(each)
 
