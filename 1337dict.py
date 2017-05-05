@@ -88,7 +88,8 @@ def leet_word(word):
 def gen_passwords(wordset, minlen, maxlen, permute):
     for i in range(len(wordset)):
         for combination in itertools.combinations(wordset, i+1):
-            if len(combination) < minlen or len(combination) > maxlen:
+            if (len(''.join(combination)) < minlen
+             or len(''.join(combination)) > maxlen):
                 continue
 
             if permute:
