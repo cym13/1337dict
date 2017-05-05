@@ -8,7 +8,7 @@ For example:
 
 ::
 
-    $ 1337speak.py a b
+    $ 1337dict a b
     a
     A
     4
@@ -30,6 +30,10 @@ course use real words.
 It is designed to be very efficient, you have no reason to worry about your
 memory usage. You can also speed it up by setting length boundaries:
 combinations that do not fit that boundary will never get generated.
+
+By default 1337dict does not permute its elements, it keeps them in order.
+This explains why in the previous example *ba* is never generated. In order
+to enable the permutations use the --permute flag.
 
 Documentation
 =============
