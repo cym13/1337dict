@@ -40,7 +40,7 @@ Documentation
 
 ::
 
-    Usage: 1337dict [-h] [-p] [-m LEN] [-M LEN] WORD...
+    Usage: 1337dict [-h] [-p] [-S] [-m LEN] [-M LEN] WORD...
 
     Options:
         -h, --help          Print this help and exit.
@@ -49,6 +49,8 @@ Documentation
                             Defaults to 0
         -M, --max LEN       Do not generate passwords longer than LEN
                             Defaults to 32
+
+        -S, --symbols       Add the following symbols to the wordset: ! - : _ + %
 
     Arguments:
         WORD    Word to be used present in the password

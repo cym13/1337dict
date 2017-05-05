@@ -21,7 +21,7 @@
 """
 Generate 1337speak based password dictionary
 
-Usage: 1337dict [-h] [-p] [-m LEN] [-M LEN] WORD...
+Usage: 1337dict [-h] [-p] [-S] [-m LEN] [-M LEN] WORD...
 
 Options:
     -h, --help          Print this help and exit.
@@ -30,6 +30,8 @@ Options:
                         Defaults to 0
     -M, --max LEN       Do not generate passwords longer than LEN
                         Defaults to 32
+
+    -S, --symbols       Add the following symbols to the wordset: ! - : _ + %
 
 Arguments:
     WORD    Word to be used present in the password
@@ -107,6 +109,9 @@ def main():
     maxlen  = args["--max"]     or 32
     permute = args["--permute"] or False
     wordset = args["WORD"]
+
+    if args["--symbols"]:
+        wordset = ["!", "-", ":", "_", "+", "%"] + wordset
 
     for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
         print(each)
