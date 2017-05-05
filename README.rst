@@ -36,10 +36,11 @@ Documentation
 
 ::
 
-    Usage: 1337dict [-h] [-m LEN] [-M LEN] WORD...
+    Usage: 1337dict [-h] [-p] [-m LEN] [-M LEN] WORD...
 
     Options:
         -h, --help          Print this help and exit.
+        -p, --permute       Enable permutations of words
         -m, --min LEN       Do not generate passwords shorter than LEN
                             Defaults to 0
         -M, --max LEN       Do not generate passwords longer than LEN

@@ -21,10 +21,11 @@
 """
 Generate 1337speak based password dictionary
 
-Usage: 1337dict [-h] [-m LEN] [-M LEN] WORD...
+Usage: 1337dict [-h] [-p] [-m LEN] [-M LEN] WORD...
 
 Options:
     -h, --help          Print this help and exit.
+    -p, --permute       Enable permutations of words
     -m, --min LEN       Do not generate passwords shorter than LEN
                         Defaults to 0
     -M, --max LEN       Do not generate passwords longer than LEN
@@ -84,23 +85,29 @@ def leet_word(word):
             yield w + l
 
 
-def gen_passwords(wordset, minlen, maxlen):
+def gen_passwords(wordset, minlen, maxlen, permute):
     for i in range(len(wordset)):
         for combination in itertools.combinations(wordset, i+1):
             if len(combination) < minlen or len(combination) > maxlen:
                 continue
-            for permutation in itertools.permutations(combination):
-                yield from leet_word(''.join(permutation))
+
+            if permute:
+                for permutation in itertools.permutations(combination):
+                    yield from leet_word(''.join(permutation))
+
+            else:
+                yield from leet_word(''.join(combination))
 
 
 def main():
     args = docopt.docopt(__doc__)
 
-    minlen  = args["--min"] or 0
-    maxlen  = args["--max"] or 32
+    minlen  = args["--min"]     or 0
+    maxlen  = args["--max"]     or 32
+    permute = args["--permute"] or False
     wordset = args["WORD"]
 
-    for each in gen_passwords(wordset, int(minlen), int(maxlen)):
+    for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
         print(each)
 
 
