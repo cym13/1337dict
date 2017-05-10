@@ -49,9 +49,6 @@ Documentation
                             Defaults to 0
         -M, --max LEN       Do not generate passwords longer than LEN
                             Defaults to 32
-
-        -S, --symbols       Add the following symbols to the wordset: ! - : _ + %
-
     Arguments:
         WORD    Word to be used present in the password
                 1337dict generates all possible combinations of those words
