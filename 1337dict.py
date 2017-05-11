@@ -42,7 +42,8 @@ Arguments:
 import sys
 import docopt
 import itertools
-from math import factorial
+from math      import factorial
+from itertools import chain
 
 letter_num = {
             'a': '4',
@@ -90,19 +91,26 @@ def leet_word(word):
             yield w + l
 
 
-def gen_passwords(wordset, minlen, maxlen, permute):
-    for i in range(len(wordset)):
-        for combination in itertools.combinations(wordset, i+1):
-            if (len(''.join(combination)) < minlen
-             or len(''.join(combination)) > maxlen):
-                continue
+def gen_passwords(wordset, minlen, maxlen, permute, start):
+    combinations, start = drop_combinations(start, wordset, permute)
 
-            if permute:
-                for permutation in itertools.permutations(combination):
-                    yield from leet_word(''.join(permutation))
+    for combination in combinations:
+        if (len(''.join(combination)) < minlen
+         or len(''.join(combination)) > maxlen):
+            continue
 
-            else:
-                yield from leet_word(''.join(combination))
+        if permute:
+            permutations, start = drop_permutations(start, combination)
+
+            variations = []
+
+            for permutation in permutations:
+                variations = chain(variations, leet_word(''.join(permutation)))
+        else:
+            variations = leet_word(''.join(combination))
+
+        drop(start, variations)
+        yield from variations
 
 
 def variations_number(word):
@@ -130,6 +138,66 @@ def possibilities_number(wordset, permute):
     return result
 
 
+def drop_combinations(todrop, wordset, permute):
+    tmp = 0
+
+    if todrop == 0:
+        combinations = []
+        for i in range(len(wordset)):
+            combinations = chain(combinations,
+                                 itertools.combinations(wordset, i+1))
+        return combinations, 0
+
+    for i in range(len(wordset)):
+        combinations = itertools.combinations(wordset, i+1)
+
+        for combination in combinations:
+            result = tmp
+            tmp += (permutations_number(combination, permute)
+                  * variations_number(''.join(combination)))
+
+            if tmp > todrop:
+                return chain([combination], combinations), result
+
+
+def drop_permutations(todrop, combination):
+    varnum       = variations_number(''.join(combination))
+    permutations = itertools.permutations(combination)
+
+    for i in range((todrop // varnum)-1):
+        permutations.__next__()
+
+    return permutations, todrop % varnum
+
+
+def match_variation(variation, word):
+    assert len(variation) == len(word)
+
+    variation = variation.lower()
+
+    for i,letter in enumerate(word):
+        if (variation[i] != letter
+        and letter_num[variation[i]] != letter
+        and letter_sym[variation[i]] != letter):
+            return False
+
+    return True
+
+
+def first(generator):
+    try:
+        first_elem = generator.__next__()
+        return first, chain([first], generator)
+
+    except StopIteration:
+        return None, []
+
+
+def drop(n, generator):
+    for i in range(n):
+        generator.__next__()
+
+
 def main():
     args = docopt.docopt(__doc__)
 
@@ -143,8 +211,8 @@ def main():
     start   = int(args["--start"] or 0)
     end     = int(args["--end"]   or possibilities_number(wordset, permute))
 
-    if end < start:
-        print("--end must be more than --start", file=sys.stderr)
+    if end <= start:
+        print("--end must be greater than --start", file=sys.stderr)
         return 1
 
     if numvar:
@@ -158,7 +226,7 @@ def main():
 
     try:
         counter = 0
-        for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
+        for each in gen_passwords(wordset, minlen, maxlen, permute, start):
             print(each)
             counter += 1
 
