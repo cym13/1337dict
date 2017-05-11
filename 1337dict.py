@@ -21,23 +21,28 @@
 """
 Generate 1337speak based password dictionary
 
-Usage: 1337dict [-h] [-p] [-m LEN] [-M LEN] WORD...
+Usage: 1337dict [-h] [options] WORD...
 
 Options:
     -h, --help          Print this help and exit.
     -p, --permute       Enable permutations of words
+    -n, --number        Outputs the number of variations
     -m, --min LEN       Do not generate passwords shorter than LEN
                         Defaults to 0
     -M, --max LEN       Do not generate passwords longer than LEN
                         Defaults to 32
+    -s, --start N       Start at output number N
+    -e, --end N         End at output number N
 
 Arguments:
     WORD    Word to be used present in the password
             1337dict generates all possible combinations of those words
 """
 
+import sys
 import docopt
 import itertools
+from math import factorial
 
 letter_num = {
             'a': '4',
@@ -100,21 +105,68 @@ def gen_passwords(wordset, minlen, maxlen, permute):
                 yield from leet_word(''.join(combination))
 
 
+def variations_number(word):
+    weigh = 1
+    for letter in word:
+        weigh *= ((2 if letter.isalpha() else 1)
+                + (letter in letter_num)
+                + (letter in letter_sym))
+
+    return weigh
+
+
+def permutations_number(combination, permute):
+    return factorial(len(combination)) if permute else 1
+
+
+def possibilities_number(wordset, permute):
+    result = 0
+
+    for i in range(len(wordset)):
+        for combination in itertools.combinations(wordset, i+1):
+            result += (permutations_number(combination, permute)
+                     * variations_number(''.join(combination)))
+
+    return result
+
+
 def main():
     args = docopt.docopt(__doc__)
 
-    minlen  = args["--min"]     or 0
-    maxlen  = args["--max"]     or 32
-    permute = args["--permute"] or False
     wordset = args["WORD"]
+
+    numvar  = args["--number"]  or False
+    permute = args["--permute"] or False
+
+    minlen  = int(args["--min"]   or 0)
+    maxlen  = int(args["--max"]   or 32)
+    start   = int(args["--start"] or 0)
+    end     = int(args["--end"]   or possibilities_number(wordset, permute))
+
+    if end < start:
+        print("--end must be more than --start", file=sys.stderr)
+        return 1
+
+    if numvar:
+        print(end - start)
+        return 0
 
     # Combinations are done from the front to the back, so putting shorter
     # elements first should iterate on more words in a shorter time
     if permute:
         wordset.sort(key=len)
 
-    for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
-        print(each)
+    try:
+        counter = 0
+        for each in gen_passwords(wordset, int(minlen), int(maxlen), permute):
+            print(each)
+            counter += 1
+
+            if counter == end - start:
+                break
+
+    except KeyboardInterrupt:
+        print(counter, file=sys.stderr)
 
 
 if __name__ == "__main__":
