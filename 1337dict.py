@@ -127,7 +127,10 @@ def gen_passwords(wordset, minlen, maxlen, permute, skip):
         else:
             variations = chain(variations, leet_word(''.join(combination)))
 
-    drop(skip, variations)
+    try:
+        drop(skip, variations)
+    except AttributeError:
+        return
     yield from variations
 
 
