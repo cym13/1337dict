@@ -31,8 +31,7 @@ Options:
                         Defaults to 0
     -M, --max LEN       Do not generate passwords longer than LEN
                         Defaults to 32
-    -s, --start N       Start at output number N
-    -e, --end N         End at output number N
+    -s, --skip N        Skip the first N entries
 
 Arguments:
     WORD    Word to be used present in the password
@@ -105,8 +104,8 @@ def test_leet_word():
              'Ba1:', 'BA1:', 'B41:', 'B@1:'])
 
 
-def gen_passwords(wordset, minlen, maxlen, permute, start):
-    combinations, start = drop_combinations(start, wordset, permute)
+def gen_passwords(wordset, minlen, maxlen, permute, skip):
+    combinations, skip = drop_combinations(skip, wordset, permute)
 
     variations = []
 
@@ -116,14 +115,14 @@ def gen_passwords(wordset, minlen, maxlen, permute, start):
             continue
 
         if permute:
-            permutations, start = drop_permutations(start, combination)
+            permutations, skip = drop_permutations(skip, combination)
 
             for permutation in permutations:
                 variations = chain(variations, leet_word(''.join(permutation)))
         else:
             variations = chain(variations, leet_word(''.join(combination)))
 
-    drop(start, variations)
+    drop(skip, variations)
     yield from variations
 
 
@@ -197,17 +196,17 @@ def test_possibilities_number():
     assert possibilities_number(['ha', 'bc'], True)  == 76
 
 
-def drop_combinations(iterations, wordset, permute):
-    if iterations == 0:
+def drop_combinations(skip, wordset, permute):
+    if skip == 0:
         combinations = []
         for i in range(len(wordset)):
             combinations = chain(combinations,
                                  itertools.combinations(wordset, i+1))
         return combinations, 0
 
-    tmp            = 0
-    result         = []
-    last_iteration = iterations
+    tmp       = 0
+    result    = []
+    last_skip = skip
 
     for i in range(len(wordset)):
         combinations = itertools.combinations(wordset, i+1)
@@ -216,12 +215,12 @@ def drop_combinations(iterations, wordset, permute):
             tmp += (permutations_number(combination, permute)
                   * variations_number(''.join(combination)))
 
-            if tmp > iterations:
+            if tmp > skip:
                 result = chain(result, [combination], combinations)
             else:
-                last_iteration = tmp
+                last_skip = tmp
 
-    return result, last_iteration
+    return result, last_skip
 
 
 def test_drop_combinations():
@@ -244,14 +243,14 @@ def test_drop_combinations():
     assert iteration == 12
 
 
-def drop_permutations(iterations, combination):
+def drop_permutations(skip, combination):
     varnum       = variations_number(''.join(combination))
     permutations = itertools.permutations(combination)
 
-    for i in range(iterations // varnum):
+    for i in range(skip // varnum):
         permutations.__next__()
 
-    return permutations, iterations % varnum
+    return permutations, skip % varnum
 
 
 def test_drop_permutations():
@@ -323,15 +322,10 @@ def main():
 
     minlen  = int(args["--min"]   or 0)
     maxlen  = int(args["--max"]   or 32)
-    start   = int(args["--start"] or 0)
-    end     = int(args["--end"]   or possibilities_number(wordset, permute))
-
-    if end <= start:
-        print("--end must be greater than --start", file=sys.stderr)
-        return 1
+    skip    = int(args["--skip"]  or 0)
 
     if numvar:
-        print(end - start)
+        print(possibilities_number(wordset, permute) - skip)
         return 0
 
     # Combinations are done from the front to the back, so putting shorter
@@ -340,13 +334,8 @@ def main():
         wordset.sort(key=len)
 
     try:
-        counter = 0
-        for each in gen_passwords(wordset, minlen, maxlen, permute, start):
+        for each in gen_passwords(wordset, minlen, maxlen, permute, skip):
             print(each)
-            counter += 1
-
-            if counter == end - start:
-                break
 
     except KeyboardInterrupt:
         print(counter, file=sys.stderr)
