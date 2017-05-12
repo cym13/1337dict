@@ -69,10 +69,10 @@ computers. For example:
     3072
 
     # On the first computer
-    $ 1337dict -n password | head -n 1536 | aircrack-ng --whatever
+    $ 1337dict password | head -n 1536 | aircrack-ng --whatever
 
     # On the second computer
-    $ 1337dict --skip 1536 -n password | aircrack-ng --whatever
+    $ 1337dict --skip 1536 password | aircrack-ng --whatever
 
 Documentation
 =============
