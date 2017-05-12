@@ -31,7 +31,15 @@ This is the basic feature of 1337dict. For example:
     @B
 
 Here the words were very small in order to keep the output small, you can of
-course use real words.
+course use real words:
+
+::
+
+    $ 1337dict password 123 '!'
+
+    $ 1337dict Ijustwant1337speak
+
+    $ 1337dict -p open guest welcome wifi
 
 It is designed to be very efficient, you have no reason to worry about your
 memory usage. You can also speed it up by setting length boundaries:
