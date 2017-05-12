@@ -41,6 +41,7 @@ Arguments:
 
 import sys
 import docopt
+import pytest
 import itertools
 from math      import factorial
 from itertools import chain
@@ -79,6 +80,13 @@ def leet_letter(letter):
         yield letter_sym[letter]
 
 
+def test_leet_letter():
+    assert list(leet_letter('a')) == ['a', 'A', '4', '@']
+    assert list(leet_letter('b')) == ['b', 'B']
+    assert list(leet_letter('1')) == ['1']
+    assert list(leet_letter('@')) == ['@']
+
+
 def leet_word(word):
     if len(word) == 0:
         return ''
@@ -91,8 +99,16 @@ def leet_word(word):
             yield w + l
 
 
+def test_leet_word():
+    assert (list(leet_word('ba1:')) ==
+            ['ba1:', 'bA1:', 'b41:', 'b@1:',
+             'Ba1:', 'BA1:', 'B41:', 'B@1:'])
+
+
 def gen_passwords(wordset, minlen, maxlen, permute, start):
     combinations, start = drop_combinations(start, wordset, permute)
+
+    variations = []
 
     for combination in combinations:
         if (len(''.join(combination)) < minlen
@@ -102,29 +118,65 @@ def gen_passwords(wordset, minlen, maxlen, permute, start):
         if permute:
             permutations, start = drop_permutations(start, combination)
 
-            variations = []
-
             for permutation in permutations:
                 variations = chain(variations, leet_word(''.join(permutation)))
         else:
-            variations = leet_word(''.join(combination))
+            variations = chain(variations, leet_word(''.join(combination)))
 
-        drop(start, variations)
-        yield from variations
+    drop(start, variations)
+    yield from variations
+
+
+def test_gen_passwords():
+    assert (list(gen_passwords(["ba1:"], 0, 4, False, 0)) ==
+            list(leet_word('ba1:')))
+
+    assert (list(gen_passwords(["ba1:"], 0, 4, True, 0)) ==
+            list(leet_word('ba1:')))
+
+    assert (list(gen_passwords(["b", "c"], 0, 2, False, 0)) ==
+            ['b', 'B', 'c', 'C', 'bc', 'bC', 'Bc', 'BC'])
+
+    assert (list(gen_passwords(["b", "c"], 0, 1, False, 0)) ==
+            ['b', 'B', 'c', 'C'])
+
+    assert (list(gen_passwords(["b", "c"], 2, 2, False, 0)) ==
+            ['bc', 'bC', 'Bc', 'BC'])
+
+    assert (list(gen_passwords(["b", "c"], 0, 2, True, 0)) ==
+            ['b',  'B',  'c',  'C',
+             'bc', 'bC', 'Bc', 'BC',
+             'cb', 'cB', 'Cb', 'CB'])
+
+    assert (list(gen_passwords(["b", "c"], 0, 2, True, 8)) ==
+             ['cb', 'cB', 'Cb', 'CB'])
+
 
 
 def variations_number(word):
-    weigh = 1
+    result = 1
     for letter in word:
-        weigh *= ((2 if letter.isalpha() else 1)
+        result *= ((2 if letter.isalpha() else 1)
                 + (letter in letter_num)
                 + (letter in letter_sym))
 
-    return weigh
+    return result
+
+
+def test_variations_number():
+    assert variations_number('a') == 4
+    assert variations_number('b') == 2
+    assert variations_number('1') == 1
+    assert variations_number('@') == 1
 
 
 def permutations_number(combination, permute):
     return factorial(len(combination)) if permute else 1
+
+
+def test_permutation_number():
+    assert permutations_number(['b', 'c'], False) == 1
+    assert permutations_number(['b', 'c'], True)  == 2
 
 
 def possibilities_number(wordset, permute):
@@ -138,63 +190,126 @@ def possibilities_number(wordset, permute):
     return result
 
 
-def drop_combinations(todrop, wordset, permute):
-    tmp = 0
+def test_possibilities_number():
+    assert possibilities_number(['haha'],     False) == 64
+    assert possibilities_number(['bcbc'],     False) == 16
+    assert possibilities_number(['ha', 'bc'], False) == 44
+    assert possibilities_number(['ha', 'bc'], True)  == 76
 
-    if todrop == 0:
+
+def drop_combinations(iterations, wordset, permute):
+    if iterations == 0:
         combinations = []
         for i in range(len(wordset)):
             combinations = chain(combinations,
                                  itertools.combinations(wordset, i+1))
         return combinations, 0
 
+    tmp            = 0
+    result         = []
+    last_iteration = iterations
+
     for i in range(len(wordset)):
         combinations = itertools.combinations(wordset, i+1)
 
         for combination in combinations:
-            result = tmp
             tmp += (permutations_number(combination, permute)
                   * variations_number(''.join(combination)))
 
-            if tmp > todrop:
-                return chain([combination], combinations), result
+            if tmp > iterations:
+                result = chain(result, [combination], combinations)
+            else:
+                last_iteration = tmp
+
+    return result, last_iteration
 
 
-def drop_permutations(todrop, combination):
+def test_drop_combinations():
+    wordset = ["ha", "bc"]
+
+    combinations, iteration = drop_combinations(0, wordset, False)
+    assert list(combinations) == [('ha',), ('bc',), ('ha', 'bc')]
+    assert iteration == 0
+
+    combinations, iteration = drop_combinations(0, wordset, True)
+    assert list(combinations) == [('ha',), ('bc',), ('ha', 'bc')]
+    assert iteration == 0
+
+    combinations, iteration = drop_combinations(2, wordset, False)
+    assert list(combinations) == [('ha',), ('bc',), ('ha', 'bc')]
+    assert iteration == 2
+
+    combinations, iteration = drop_combinations(13, wordset, True)
+    assert list(combinations) == [('ha', 'bc')]
+    assert iteration == 12
+
+
+def drop_permutations(iterations, combination):
     varnum       = variations_number(''.join(combination))
     permutations = itertools.permutations(combination)
 
-    for i in range((todrop // varnum)-1):
+    for i in range(iterations // varnum):
         permutations.__next__()
 
-    return permutations, todrop % varnum
+    return permutations, iterations % varnum
 
 
-def match_variation(variation, word):
-    assert len(variation) == len(word)
+def test_drop_permutations():
+    combination = ('ha', 'bc', 'de')
+    varnum      = variations_number(''.join(combination))
 
-    variation = variation.lower()
+    permutations, iteration = drop_permutations(0, combination)
+    assert (list(permutations) ==
+            [('ha', 'bc', 'de'), ('ha', 'de', 'bc'), ('bc', 'ha', 'de'),
+             ('bc', 'de', 'ha'), ('de', 'ha', 'bc'), ('de', 'bc', 'ha')])
+    assert iteration == 0
 
-    for i,letter in enumerate(word):
-        if (variation[i] != letter
-        and letter_num[variation[i]] != letter
-        and letter_sym[variation[i]] != letter):
-            return False
+    permutations, iteration = drop_permutations(varnum-1, combination)
+    assert (list(permutations) ==
+            [('ha', 'bc', 'de'), ('ha', 'de', 'bc'), ('bc', 'ha', 'de'),
+             ('bc', 'de', 'ha'), ('de', 'ha', 'bc'), ('de', 'bc', 'ha')])
+    assert iteration == varnum-1
 
-    return True
+    permutations, iteration = drop_permutations(varnum+1, combination)
+    assert (list(permutations) ==
+            [                    ('ha', 'de', 'bc'), ('bc', 'ha', 'de'),
+             ('bc', 'de', 'ha'), ('de', 'ha', 'bc'), ('de', 'bc', 'ha')])
+    assert iteration == 1
 
 
 def first(generator):
     try:
         first_elem = generator.__next__()
-        return first, chain([first], generator)
+        return first_elem, chain([first_elem], generator)
 
     except StopIteration:
         return None, []
 
 
+def test_first():
+    generator  = ( x for x in range(2) )
+    front, gen = first(generator)
+
+    assert front     == 0
+    assert list(gen) == [0, 1]
+
+    assert first(x for x in []) == (None, [])
+
+
 def drop(n, generator):
     for i in range(n):
+        generator.__next__()
+
+
+def test_drop():
+    generator = ( x for x in range(10) )
+
+    drop(5, generator)
+    assert generator.__next__() == 5
+
+    drop(4, generator)
+
+    with pytest.raises(StopIteration):
         generator.__next__()
 
 
