@@ -40,10 +40,15 @@ Arguments:
 
 import sys
 import docopt
-import pytest
 import itertools
 from math      import factorial
 from itertools import chain
+
+try:
+    import pytest
+except ModuleNotFoundError:
+    pass
+
 
 letter_num = {
             'a': '4',
