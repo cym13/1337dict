@@ -284,24 +284,6 @@ def test_drop_permutations():
     assert iteration == 1
 
 
-def first(generator):
-    try:
-        first_elem = generator.__next__()
-        return first_elem, chain([first_elem], generator)
-
-    except StopIteration:
-        return None, []
-
-
-def test_first():
-    generator  = ( x for x in range(2) )
-    front, gen = first(generator)
-
-    assert front     == 0
-    assert list(gen) == [0, 1]
-
-    assert first(x for x in []) == (None, [])
-
 
 def drop(n, generator):
     for i in range(n):
