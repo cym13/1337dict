@@ -46,7 +46,7 @@ from itertools import chain
 
 try:
     import pytest
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
