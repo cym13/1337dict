@@ -322,10 +322,13 @@ def main():
     # elements first should iterate on more words in a shorter time
     if permute:
         wordset.sort(key=len)
+        
+    counter = 0
 
     try:
         for each in gen_passwords(wordset, minlen, maxlen, permute, skip):
             print(each)
+            counter += 1
 
     except KeyboardInterrupt:
         print(counter, file=sys.stderr)
