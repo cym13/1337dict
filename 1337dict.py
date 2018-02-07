@@ -74,16 +74,18 @@ letter_sym = {
 
 @lru_cache(maxsize=None, typed=False)
 def leet_letter(letter):
-    yield letter.lower()
+    result = [letter.lower()]
 
     if letter.isalpha():
-        yield letter.upper()
+        result += letter.upper()
 
     if letter in letter_num:
-        yield letter_num[letter]
+        result += letter_num[letter]
 
     if letter in letter_sym:
-        yield letter_sym[letter]
+        result += letter_sym[letter]
+
+    return result
 
 
 def test_leet_letter():
