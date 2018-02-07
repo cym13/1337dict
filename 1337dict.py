@@ -43,6 +43,7 @@ import docopt
 import itertools
 from math      import factorial
 from itertools import chain
+from functools import lru_cache
 
 try:
     import pytest
@@ -71,6 +72,7 @@ letter_sym = {
         }
 
 
+@lru_cache(maxsize=None, typed=False)
 def leet_letter(letter):
     yield letter.lower()
 
