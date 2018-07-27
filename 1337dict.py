@@ -190,11 +190,15 @@ def test_permutation_number():
     assert permutations_number(['b', 'c'], True)  == 2
 
 
-def possibilities_number(wordset, permute):
+def possibilities_number(wordset, permute, minlen=0, maxlen=None):
     result = 0
 
     for i in range(len(wordset)):
         for combination in itertools.combinations(wordset, i+1):
+            combination_len = len(''.join(combination))
+            if maxlen is not None:
+                if combination_len < minlen or combination_len > maxlen:
+                    break
             result += (permutations_number(combination, permute)
                      * variations_number(''.join(combination)))
 
@@ -202,10 +206,12 @@ def possibilities_number(wordset, permute):
 
 
 def test_possibilities_number():
-    assert possibilities_number(['haha'],     False) == 64
-    assert possibilities_number(['bcbc'],     False) == 16
-    assert possibilities_number(['ha', 'bc'], False) == 44
-    assert possibilities_number(['ha', 'bc'], True)  == 76
+    assert possibilities_number(['haha'],     False)       == 64
+    assert possibilities_number(['bcbc'],     False)       == 16
+    assert possibilities_number(['ha', 'bc'], False)       == 44
+    assert possibilities_number(['ha', 'bc'], True)        == 76
+    assert possibilities_number(['ha'],       True, 0, 2)  == 8
+    assert possibilities_number(['ha', 'bc'], True, 3, 4)  == 64
 
 
 def drop_combinations(skip, wordset, permute):
@@ -319,14 +325,14 @@ def main():
     skip    = int(args["--skip"]  or 0)
 
     if numvar:
-        print(possibilities_number(wordset, permute) - skip)
+        print(possibilities_number(wordset, permute, minlen, maxlen) - skip)
         return 0
 
     # Combinations are done from the front to the back, so putting shorter
     # elements first should iterate on more words in a shorter time
     if permute:
         wordset.sort(key=len)
-        
+
     counter = 0
 
     try:
