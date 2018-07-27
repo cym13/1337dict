@@ -24,7 +24,8 @@ Generate 1337speak based password dictionary
 Usage: 1337dict [-h] [options] WORD...
 
 Options:
-    -h, --help          Print this help and exit.
+    -h, --help          Print this help and exit
+    -v, --version       Print version and exit
     -p, --permute       Enable permutations of words
     -n, --number        Outputs the number of variations
     -m, --min LEN       Do not generate passwords shorter than LEN
@@ -37,6 +38,7 @@ Arguments:
     WORD    Word to be used present in the password
             1337dict generates all possible combinations of those words
 """
+VERSION="1.0"
 
 import sys
 import docopt
@@ -313,7 +315,7 @@ def test_drop():
 
 
 def main():
-    args = docopt.docopt(__doc__)
+    args = docopt.docopt(__doc__, version=VERSION)
 
     wordset = args["WORD"]
 
