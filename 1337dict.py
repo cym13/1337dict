@@ -116,15 +116,12 @@ def test_leet_word():
 
 
 def gen_passwords(wordset, minlen, maxlen, permute, skip):
-    combinations, skip = drop_combinations(skip, wordset, permute)
+    combinations, skip = drop_combinations(skip, wordset, permute,
+                                           minlen, maxlen)
 
     variations = []
 
     for combination in combinations:
-        if (len(''.join(combination)) < minlen
-         or len(''.join(combination)) > maxlen):
-            continue
-
         if permute:
             permutations, skip = drop_permutations(skip, combination)
 
@@ -216,12 +213,18 @@ def test_possibilities_number():
     assert possibilities_number(['ha', 'bc'], True, 3, 4)  == 64
 
 
-def drop_combinations(skip, wordset, permute):
+def drop_combinations(skip, wordset, permute, minlen=0, maxlen=None):
+    def inrange(combination):
+        combination_len = len(''.join(combination))
+        return (maxlen is None
+                or (combination_len >= minlen and combination_len <= maxlen))
+
     if skip == 0:
         combinations = []
         for i in range(len(wordset)):
             combinations = chain(combinations,
                                  itertools.combinations(wordset, i+1))
+        combinations = filter(inrange, combinations)
         return combinations, 0
 
     tmp       = 0
@@ -232,6 +235,9 @@ def drop_combinations(skip, wordset, permute):
         combinations = itertools.combinations(wordset, i+1)
 
         for combination in combinations:
+            if not inrange(combination):
+                continue
+
             tmp += (permutations_number(combination, permute)
                   * variations_number(''.join(combination)))
 
