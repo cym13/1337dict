@@ -38,7 +38,7 @@ Arguments:
     WORD    Word to be used present in the password
             1337dict generates all possible combinations of those words
 """
-VERSION="1.0"
+VERSION="1.1"
 
 import sys
 import docopt
